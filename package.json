@@ -1,0 +1,26 @@
+{
+  "name": "telegrampbot",
+  "version": "1.0.0",
+  "description": "Simple Telegram bot to update different maga sites",
+  "main": "file.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Madamas/Telegram-Bot.git"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "manga",
+    "updater",
+    "parse"
+  ],
+  "author": "Madamas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Madamas/Telegram-Bot/issues"
+  },
+  "homepage": "https://github.com/Madamas/Telegram-Bot#readme"
+}

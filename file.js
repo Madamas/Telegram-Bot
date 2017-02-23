@@ -1,25 +1,33 @@
 var TelegramBot = require('node-telegram-bot-api');
-var FeedParser = require('feedparser');
 var https = require('https');
 var fs = require('fs');
 var request = require('request');
 var parseString = require('xml2js').parseString;
 // replace the value below with the Telegram token you receive from @BotFather
-var token = '304133003:AAEfcelIbqpnGOshxjuV5d4KzISMzuQzUNY';
+var TOKEN = '304133003:AAEfcelIbqpnGOshxjuV5d4KzISMzuQzUNY';
 var util = require('util');
 var cronJob = require('cron').CronJob;
 var MongoClient = require('mongodb').MongoClient
   , assert = require('assert');
+const options = {
+  	polling: true,
+  	webHook:{
+  		port: process.env.PORT
+  	}
+  };
+const urlH = process.env.APP_URL || 'murmuring-plateau-24815.herokuapp.com:443';
 // Create a bot that uses 'polling' to fetch new updates
-var bot = new TelegramBot(token, { polling: true });
-var db = 'mongodb://localhost:27017/TeleBot';
+var bot = new TelegramBot(TOKEN, options);
+var db = 'mongodb://madamas:Brovary2015@ds157799.mlab.com:57799/mangapbot';
+//setting webhook
+bot.setWebHook(`${urlH}/bot${TOKEN}`);
 
-var download = function(url, dest, msg, cb) {
+var download = function(url, dest, msg, callback) {
   var file = fs.createWriteStream(dest);
   var request = https.get(url, function(response) {
     response.pipe(file);
     file.on('finish', function() {
-      file.close(cb);
+      file.close(callback);
       bot.sendPhoto(msg.chat.id,dest,{reply_to_message_id:msg.message_id, caption:msg.document.mime_type});
     });
   });
@@ -46,18 +54,17 @@ function parseMany(element,index,array){
 function addToDB(uri,chatId){
   request({uri: uri,method:'POST',encoding:'binary'},
     function(err,res,page){
-    	if (err)
+    if (err)
     {bot.sendMessage(chatId,'Couldn\'t add your link');}
     else{
-     parseString(page,(err,result) =>{
+        parseString(page,(err,result) =>{
         var chapter = result.rss.channel[0].item[0].title[0];
         var name = result.rss.channel[0].title[0];
         var link = result.rss.channel[0].item[0].link[0];
         var rss = uri;
+        bot.sendMessage(chatId,'Added your title :)');
           MongoClient.connect(db, function(err, db) {
-          assert.equal(null, err);
             addDocuments(db, name, chapter, rss, link, chatId, function() {
-             bot.sendMessage(chatId,'Added your title :)');
              db.close();
              });
           });
@@ -179,7 +186,7 @@ bot.onText(/\/parse (.+)/,function(msg, match){
 
 bot.onText(/\/help/,function(msg){
 	bot.sendMessage(msg.from.id, 
-	'Rn i can show you some /love say what you want /echo and tell you the basic properties of img that you sent to me\n'+
+	'Rn i can show you some /love \n say what you want /echo \n tell you the basic properties of img that you sent to me\n'+
 	'/parse [url] where url is link to rss (.xml) feed of your manga (rn parsing only mangafox)')
 });
 
