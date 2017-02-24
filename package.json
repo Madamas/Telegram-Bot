@@ -4,7 +4,8 @@
   "description": "Simple Telegram bot to update different maga sites",
   "main": "file.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,15 @@
   ],
   "author": "Madamas",
   "license": "ISC",
+  "dependencies":{
+    "node-telegram-bot-api": "^0.27.0",
+    "xml2js": "^0.4.17",
+    "cron": "^1.2.1",
+    "mongodb": "^2.2.24",
+    "fs":"latest",
+    "https": "latest",
+    "request": "latest"
+  },
   "bugs": {
     "url": "https://github.com/Madamas/Telegram-Bot/issues"
   },

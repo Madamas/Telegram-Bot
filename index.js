@@ -1,26 +1,20 @@
-var TelegramBot = require('node-telegram-bot-api');
-var https = require('https');
-var fs = require('fs');
-var request = require('request');
-var parseString = require('xml2js').parseString;
-// replace the value below with the Telegram token you receive from @BotFather
-var TOKEN = '304133003:AAEfcelIbqpnGOshxjuV5d4KzISMzuQzUNY';
-var util = require('util');
-var cronJob = require('cron').CronJob;
-var MongoClient = require('mongodb').MongoClient
-  , assert = require('assert');
+var TelegramBot = require('node-telegram-bot-api'),
+     fs = require('fs'),
+     request = require('request'),
+     cronJob = require('cron').CronJob,
+     config = require('./config'),
+     foxP = require('./mangafoxP.js');
 const options = {
-  	polling: true,
   	webHook:{
   		port: process.env.PORT
   	}
   };
-const urlH = process.env.APP_URL || 'murmuring-plateau-24815.herokuapp.com:443';
+var token = config.token;
+const urlH = process.env.APP_URL || config.herokURL;
 // Create a bot that uses 'polling' to fetch new updates
-var bot = new TelegramBot(TOKEN, options);
-var db = 'mongodb://madamas:Brovary2015@ds157799.mlab.com:57799/mangapbot';
+var bot = new TelegramBot(config.token, options);
 //setting webhook
-bot.setWebHook(`${urlH}/bot${TOKEN}`);
+bot.setWebHook(`${urlH}/bot${token}`);
 
 var download = function(url, dest, msg, callback) {
   var file = fs.createWriteStream(dest);
@@ -32,87 +26,6 @@ var download = function(url, dest, msg, callback) {
     });
   });
 }; 
-//parsing all entries in db to look for updates
-function parseMany(element,index,array){
-  var rss = element.rss;
-  var chatId = element.user;
-  request({uri:rss,method:'POST',encoding:'binary'},
-    function(err,res,page){
-     parseString(page,(err,result) =>{
-        var chapter = result.rss.channel[0].item[0].title[0];
-        var name = result.rss.channel[0].title[0];
-        var link = result.rss.channel[0].item[0].link[0];
-          MongoClient.connect(db, function(err, db) {
-            assert.equal(null, err);
-            addDocuments(db, name, chapter, rss, link, chatId, function() {
-             });
-          });
-     });
-  });
-};
-//first addition to db
-function addToDB(uri,chatId){
-  request({uri: uri,method:'POST',encoding:'binary'},
-    function(err,res,page){
-    if (err)
-    {bot.sendMessage(chatId,'Couldn\'t add your link');}
-    else{
-        parseString(page,(err,result) =>{
-        var chapter = result.rss.channel[0].item[0].title[0];
-        var name = result.rss.channel[0].title[0];
-        var link = result.rss.channel[0].item[0].link[0];
-        var rss = uri;
-        bot.sendMessage(chatId,'Added your title :)');
-          MongoClient.connect(db, function(err, db) {
-            addDocuments(db, name, chapter, rss, link, chatId, function() {
-             db.close();
-             });
-          });
-     });
- 	}
-  });
-};
-//updates db and shows message if new chapter is out
-var showDocuments = function(db, callback) {
-  var collection = db.collection('documents');
-  collection.find({}).toArray(function(err, docs) {
-    assert.equal(err, null);
-    docs.forEach(parseMany);
-    callback(docs);
-  });      
-};
-//adds new entry to db
-var insertDocuments = function(db, name, chapter, rss, chatId, callback) {
-  var collection = db.collection('documents');
-  collection.insertMany([{ user: chatId, name: name, ch: chapter, rss: rss}], function(err, result) {
-    assert.equal(err, null);
-    callback(result);
-  });
-};
-//sends an message if new chapter of existing db entry
-//or if entry isn't in db adds it 
-var addDocuments = function(db, name, chapter, rss, link, chatId, callback) {
-  var collection = db.collection('documents');
-  const opts = {parse_mode:'markdown',disable_web_page_preview:true};
-  collection.find({'user': chatId, 'name':name}).toArray(function(err, docs) {
-    assert.equal(err, null);
-    if(docs.length){
-      if(docs[0].ch == chapter)
-        callback(docs);
-      else
-      {
-        bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
-        collection.updateOne({user:chatId, name:name},{ch:chapter},()=>{callback(docs);});
-      }
-    }else
-    {
-	 bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
-     insertDocuments(db,name,chapter,rss, chatId,()=>{callback(docs);}); 
-    }
-    callback(docs);
-  });      
-};
-
 
 function matchRule(str, rule) {
   return new RegExp("^" + rule.split("*").join(".*") + "$").test(str);
@@ -121,8 +34,7 @@ function matchRule(str, rule) {
 //cron job to periodically parse all db entries
 new cronJob('00 30 7 * * 1', ()=>{
 	 MongoClient.connect(db, function(err, db) {
-        assert.equal(null, err);
-        showDocuments(db, function() {
+        foxP.showDocuments(db, function() {
         db.close();
            });
         });
@@ -178,10 +90,13 @@ bot.onText(/hi/, function(msg){
 });
 
 bot.onText(/\/parse (.+)/,function(msg, match){
-
+const opts = {parse_mode:'markdown',disable_web_page_preview:true};
 //TODO:	create better parser to parse different sites (mangafox still the best manga site, ofc)
 	var rss = match[1];
-	addToDB(rss, msg.chat.id);
+	foxP.addToDB(rss, msg.chat.id, (bool,chapter,name,link)=>{
+		if (!bool) bot.sendMessage(chatId,'Couldn\'t add your link');
+		else bot.sendMessage(msg.chat.id,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
+	});
 });
 
 bot.onText(/\/help/,function(msg){
