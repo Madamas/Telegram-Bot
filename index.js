@@ -107,7 +107,7 @@ bot.onText(/\/help/,function(msg){
 
 bot.onText(/\/start/, function (msg){
 	chatId = msg.chat.id;
-	bot.sendMessage(msg.chat.id,'Hi, this useless shit provided to you by shit company');
+	bot.sendMessage(msg.chat.id,'Howdy partner');
 });
 
 bot.on('photo', function (msg) {
@@ -124,14 +124,4 @@ bot.on('document', function(msg){
 		var imgLink = 'https://api.telegram.org/file/bot'+token+'/'+data.file_path;
 		download(imgLink,destination, msg);	
 	});}
-});
-
-bot.onText(/\/testuserphoto$/, function (msg) {
-    var chatId = msg.chat.id;
-    var userId = msg.from.id;
-
-    bot.getUserProfilePhotos(userId, 0, 1).then(function(data){
-      bot.sendPhoto(chatId,data.photos[0][0].file_id,{caption: "It's your photo!"});
-    });
-
 });
