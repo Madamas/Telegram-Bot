@@ -25,14 +25,13 @@ var methods = {
 	    function(err,res,page){
 	    if (err)
 	    {	callback(false);
-	    	/*bot.sendMessage(chatId,'Couldn\'t add your link');*/}
+	    	}
 	    else{
 	        parseString(page,(err,result) =>{
 	        var chapter = result.rss.channel[0].item[0].title[0];
 	        var name = result.rss.channel[0].title[0];
 	        var link = result.rss.channel[0].item[0].link[0];
 	        var rss = uri;
-	        //bot.sendMessage(chatId,'Added your title :)');
 	          MongoClient.connect(db, function(err, db) {
 	            methods.addDocuments(db, name, chapter, rss, link, chatId, function(chapter,name,link) {
 	             db.close();
@@ -64,15 +63,14 @@ var methods = {
 	        callback(chapter, name, link);
 	      else
 	      {
-	        //bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
 	        collection.updateOne({user:chatId, name:name},{ch:chapter},()=>{callback(chapter,name,link);});
 	      }
-	    }else
+	    }
+	    else
 	    {
-		 //bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
 	     insertDocuments(db,name,chapter,rss, chatId,()=>{callback(chapter,name,link);}); 
 	    }
-	    //callback(docs);
+
 	  });      
 	}
 };
