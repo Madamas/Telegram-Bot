@@ -14,7 +14,7 @@ var methods = {
 	        var name = result.rss.channel[0].title[0];
 	        var link = result.rss.channel[0].item[0].link[0];
 	          MongoClient.connect(db, function(err, db) {
-	            methods.addDocuments(db, name, chapter, rss, link, chatId, function() {
+	            methods.addDocuments(db, name, chapter, rss, link, chatId, () => {
 	             });
 	          });
 	     });
@@ -33,7 +33,7 @@ var methods = {
 	        var link = result.rss.channel[0].item[0].link[0];
 	        var rss = uri;
 	          MongoClient.connect(db, function(err, db) {
-	            methods.addDocuments(db, name, chapter, rss, link, chatId, function(chapter,name,link) {
+	            methods.addDocuments(db, name, chapter, rss, link, chatId, (chapter,name,link) => {
 	             db.close();
 	             callback(true,chapter,name,link);
 	             });
@@ -44,14 +44,14 @@ var methods = {
 	},
 	showDocuments: function(db, callback) {
 	  var collection = db.collection('documents');
-	  collection.find({}).toArray(function(err, docs) {
+	  collection.find({}).toArray( (err, docs) => {
 	    docs.forEach(parseMany);
 	    callback(docs);
 	  });      
 	},
 	insertDocuments: function(db, name, chapter, rss, chatId, callback) {
 	  var collection = db.collection('documents');
-	  collection.insertMany([{ user: chatId, name: name, ch: chapter, rss: rss}], function(err, result) {
+	  collection.insertMany([{ user: chatId, name: name, ch: chapter, rss: rss}], (err, result) => {
 	    callback(result);
 	  });
 	},
@@ -68,7 +68,7 @@ var methods = {
 	    }
 	    else
 	    {
-	     insertDocuments(db,name,chapter,rss, chatId,()=>{callback(chapter,name,link);}); 
+	     methods.insertDocuments(db,name,chapter,rss, chatId,()=>{callback(chapter,name,link);}); 
 	    }
 
 	  });      
