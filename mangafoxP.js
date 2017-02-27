@@ -14,7 +14,7 @@ var methods = {
 	        var name = result.rss.channel[0].title[0];
 	        var link = result.rss.channel[0].item[0].link[0];
 	          MongoClient.connect(db, function(err, db) {
-	            methods.addDocuments(db, name, chapter, rss, link, chatId, () => {
+	            methods.addDocuments(db, name, chapter, rss, link, chatId, function() {
 	             });
 	          });
 	     });
@@ -25,15 +25,16 @@ var methods = {
 	    function(err,res,page){
 	    if (err)
 	    {	callback(false);
-	    	}
+	    	/*bot.sendMessage(chatId,'Couldn\'t add your link');*/}
 	    else{
 	        parseString(page,(err,result) =>{
 	        var chapter = result.rss.channel[0].item[0].title[0];
 	        var name = result.rss.channel[0].title[0];
 	        var link = result.rss.channel[0].item[0].link[0];
 	        var rss = uri;
+	        //bot.sendMessage(chatId,'Added your title :)');
 	          MongoClient.connect(db, function(err, db) {
-	            methods.addDocuments(db, name, chapter, rss, link, chatId, (chapter,name,link) => {
+	            methods.addDocuments(db, name, chapter, rss, link, chatId, function(chapter,name,link) {
 	             db.close();
 	             callback(true,chapter,name,link);
 	             });
@@ -44,14 +45,14 @@ var methods = {
 	},
 	showDocuments: function(db, callback) {
 	  var collection = db.collection('documents');
-	  collection.find({}).toArray( (err, docs) => {
+	  collection.find({}).toArray(function(err, docs) {
 	    docs.forEach(parseMany);
 	    callback(docs);
 	  });      
 	},
 	insertDocuments: function(db, name, chapter, rss, chatId, callback) {
 	  var collection = db.collection('documents');
-	  collection.insertMany([{ user: chatId, name: name, ch: chapter, rss: rss}], (err, result) => {
+	  collection.insertMany([{ user: chatId, name: name, ch: chapter, rss: rss}], function(err, result) {
 	    callback(result);
 	  });
 	},
@@ -63,14 +64,15 @@ var methods = {
 	        callback(chapter, name, link);
 	      else
 	      {
+	        //bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
 	        collection.updateOne({user:chatId, name:name},{ch:chapter},()=>{callback(chapter,name,link);});
 	      }
-	    }
-	    else
+	    }else
 	    {
+		 //bot.sendMessage(chatId,'Latest chapter is '+chapter+' of '+name+'\n'+'[Link]('+link+')',opts);
 	     methods.insertDocuments(db,name,chapter,rss, chatId,()=>{callback(chapter,name,link);}); 
 	    }
-
+	    //callback(docs);
 	  });      
 	}
 };
