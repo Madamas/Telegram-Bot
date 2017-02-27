@@ -1,3 +1,4 @@
 config.js
 newrelic.js
+Procfile
 ./node_modules
